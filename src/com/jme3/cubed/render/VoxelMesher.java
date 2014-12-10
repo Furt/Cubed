@@ -1,29 +1,56 @@
+/**
+ * 
+ * Copyright (c) 2014, Nicholas Minkler
+ * 
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, 
+ *      are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ *      this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ *      this list of conditions and the following disclaimer in the documentation 
+ *      and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ *      may be used to endorse or promote products derived from this software 
+ *      without specific prior written permission.
+ *
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ */
 package com.jme3.cubed.render;
 
 import com.jme3.cubed.BlockSkin;
 import com.jme3.cubed.ChunkTerrain;
 import com.jme3.cubed.Face;
-import com.jme3.cubed.math.Vector2i;
 import com.jme3.cubed.math.Vector3i;
-import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.util.BufferUtils;
 import java.util.ArrayList;
 
-/**
- *
- * @author Nicholas Minkler <sleaker@gmail.com>
- */
 public abstract class VoxelMesher {
     public abstract Mesh generateMesh(ChunkTerrain terrain);
     
-    protected Mesh genMesh(ArrayList<Vector3f> vertexList, ArrayList<Vector2f> textCoordsList, ArrayList<Integer> indicesList, ArrayList<Float> normalsList) {
+    protected Mesh genMesh(ArrayList<Vector3f> vertexList, ArrayList<Vector3f> textCoordsList, ArrayList<Integer> indicesList, ArrayList<Float> normalsList) {
         // Dump all of the Data into buffers on a Mesh
         Mesh mesh = new Mesh();
         mesh.setBuffer(VertexBuffer.Type.Position, 3, BufferUtils.createFloatBuffer(vertexList.toArray(new Vector3f[vertexList.size()])));
-        mesh.setBuffer(VertexBuffer.Type.TexCoord, 2, BufferUtils.createFloatBuffer(textCoordsList.toArray(new Vector2f[textCoordsList.size()])));
+        mesh.setBuffer(VertexBuffer.Type.TexCoord, 3, BufferUtils.createFloatBuffer(textCoordsList.toArray(new Vector3f[textCoordsList.size()])));
         int[] indices = new int[indicesList.size()];
         for (int i = 0; i < indices.length; i++) {
             indices[i] = indicesList.get(i);
@@ -58,7 +85,7 @@ public abstract class VoxelMesher {
      */
     protected void writeQuad(ArrayList<Vector3f> verts, ArrayList<Integer> indices, ArrayList<Float> normals,
             Vector3f bottomLeft, Vector3f topLeft, Vector3f topRight, Vector3f bottomRight, Face face) {
-        //System.out.println("BL: " + bottomLeft + " BR: " + bottomRight + " TL: " + topLeft + " TR: " + topRight);
+
         // Get current vertex count, and add indices to the index list
         int vertCount = verts.size();
         indices.add(vertCount + 2);
@@ -75,28 +102,24 @@ public abstract class VoxelMesher {
         verts.add(bottomLeft);
         verts.add(topLeft);
         verts.add(topRight);
-        verts.add(bottomRight);
-        
-        
+        verts.add(bottomRight);    
     }
     
-    protected void writeTextureCoords(ArrayList<Vector2f> textureCoords, ChunkTerrain terrain, Vector3i blockLoc, Face face, int width, int height, BlockSkin skin) {
-        // add texture locations from skin - need to adjust for width/height
-        addBlockTextureCoordinates(textureCoords, skin.getTextureLocation(terrain, blockLoc, face), width, height);
-    }
-        
-    private static void addBlockTextureCoordinates(ArrayList<Vector2f> textureCoordinatesList, Vector2i textureLoc, int width, int height){
-        textureCoordinatesList.add(getTextureCoordinates(textureLoc, 0, 0));
-        textureCoordinatesList.add(getTextureCoordinates(textureLoc, width, 0));
-        textureCoordinatesList.add(getTextureCoordinates(textureLoc, 0, height));
-        textureCoordinatesList.add(getTextureCoordinates(textureLoc, width, height));
-    }
-
-    private static Vector2f getTextureCoordinates(Vector2i textureLoc, int xUnitsToAdd, int yUnitsToAdd){
-        float textureCount = 16;
-        float textureUnit = 1.0f / textureCount;
-        float x = (((textureLoc.getX() + xUnitsToAdd) * textureUnit));
-        float y = ((((-1 * textureLoc.getY()) + (yUnitsToAdd - 1)) * textureUnit) + 1);
-        return new Vector2f(x, y);
+    /**
+     * Write the texture coordinates t othe coordinate list takes into account the texture offset, then calculates what the 4 corners of the u,v should be.
+     * @param textureCoords
+     * @param terrain
+     * @param blockLoc
+     * @param face
+     * @param width
+     * @param height
+     * @param skin 
+     */
+    protected void writeTextureCoords(ArrayList<Vector3f> textureCoords, ChunkTerrain terrain, Vector3i blockLoc, Face face, int width, int height, BlockSkin skin) {
+        int textOffset = skin.getTextureOffset(terrain, blockLoc, face);
+        textureCoords.add(new Vector3f(0, 0, textOffset));
+        textureCoords.add(new Vector3f(width, 0, textOffset));
+        textureCoords.add(new Vector3f(0, height, textOffset));
+        textureCoords.add(new Vector3f(width, height, textOffset));
     }
 }

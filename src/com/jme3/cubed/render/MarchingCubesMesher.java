@@ -2,7 +2,6 @@ package com.jme3.cubed.render;
 
 import com.jme3.cubed.ChunkTerrain;
 import com.jme3.cubed.math.Vector3i;
-import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Mesh;
 import java.util.ArrayList;
@@ -16,7 +15,7 @@ public class MarchingCubesMesher extends VoxelMesher {
     @Override
     public Mesh generateMesh(ChunkTerrain terrain) {
         ArrayList<Vector3f> verts = new ArrayList<>();
-        ArrayList<Vector2f> textCoords = new ArrayList<>();
+        ArrayList<Vector3f> textCoords = new ArrayList<>();
         ArrayList<Integer> indices = new ArrayList<>();
         //ArrayList<Float> normals = new ArrayList<>();
 

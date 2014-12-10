@@ -1,26 +1,45 @@
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013 Mikola Lysenko - https://github.com/mikolalysenko/greedy-mesher
+ * 
+ * Adaptation to Java by Robert O'Leary - https://github.com/roboleary/GreedyMesh
+ * Minor updates to allow Texturing by Nick Minkler
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 package com.jme3.cubed.render;
 
 import com.jme3.cubed.ChunkTerrain;
 import com.jme3.cubed.Face;
 import com.jme3.cubed.MaterialManager;
 import com.jme3.cubed.math.Vector3i;
-import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Mesh;
 import java.util.ArrayList;
-
-/**
- *
- * @author Nicholas Minkler <sleaker@gmail.com>
- */
-
 
 public class GreedyMesher extends VoxelMesher {
 
     @Override
     public Mesh generateMesh(ChunkTerrain terrain) {
-                ArrayList<Vector3f> verts = new ArrayList<>();
-        ArrayList<Vector2f> textCoords = new ArrayList<>();
+        ArrayList<Vector3f> verts = new ArrayList<>();
+        ArrayList<Vector3f> textCoords = new ArrayList<>();
         ArrayList<Integer> indices = new ArrayList<>();
         ArrayList<Float> normals = new ArrayList<>();
 
@@ -102,29 +121,35 @@ public class GreedyMesher extends VoxelMesher {
                                 Vector3f vec3 = new Vector3f(r + du[0] + dv[0], s + du[1] + dv[1], t + du[2] + dv[2]);
                                 
                                 // Each face has a specific order of vertices otherwise the textures rotate incorrectly
+                                // width/height are flipped when dealing with left/right/bottom face due to how rotation of dimensions works, and what order the greedy mesher merges them
                                 switch (face) {
                                     case TOP:
                                         writeQuad(verts, indices, normals, vec1, vec3, vec0, vec2, face);
+                                        writeTextureCoords(textCoords, terrain, tmpI.set(x[0], x[1], x[2]), face, h, w, MaterialManager.getInstance().getType(mask[n]).getSkin());
                                         break;
                                     case BOTTOM:
                                         writeQuad(verts, indices, normals, vec3, vec1, vec2, vec0, face);
+                                        writeTextureCoords(textCoords, terrain, tmpI.set(x[0], x[1], x[2]), face, h, w, MaterialManager.getInstance().getType(mask[n]).getSkin());
                                         break;
                                     case LEFT:
                                         writeQuad(verts, indices, normals, vec0, vec2, vec1, vec3, face);
+                                        writeTextureCoords(textCoords, terrain, tmpI.set(x[0], x[1], x[2]), face, h, w, MaterialManager.getInstance().getType(mask[n]).getSkin());
                                         break;
                                     case RIGHT:
                                         //TODO: figure out why right face overwrites transparency
                                         writeQuad(verts, indices, normals, vec2, vec0, vec3, vec1, face);
+                                        writeTextureCoords(textCoords, terrain, tmpI.set(x[0], x[1], x[2]), face, h, w, MaterialManager.getInstance().getType(mask[n]).getSkin());
                                         break;
                                     case FRONT:
                                         writeQuad(verts, indices, normals, vec0, vec1, vec2, vec3, face);
+                                        writeTextureCoords(textCoords, terrain, tmpI.set(x[0], x[1], x[2]), face, w, h, MaterialManager.getInstance().getType(mask[n]).getSkin());
                                         break;
                                     case BACK:
                                         writeQuad(verts, indices, normals, vec1, vec0, vec3, vec2, face);
+                                        writeTextureCoords(textCoords, terrain, tmpI.set(x[0], x[1], x[2]), face, w, h, MaterialManager.getInstance().getType(mask[n]).getSkin());
                                         break;
                                 }
-                                // Write the texture coords
-                                this.writeTextureCoords(textCoords, terrain, tmpI, face, w, h, MaterialManager.getInstance().getType(mask[n]).getSkin());
+                                
                                 // Clear the mask
                                 for (l = 0; l < h; ++l) {
                                     for (k = 0; k < w; ++k) {
